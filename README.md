@@ -11,7 +11,7 @@ https://github.com/user-attachments/assets/26f1ee22-9754-4f68-968e-40825223aa8a
 
 ## クリーンアーキテクチャ
 
-ビジネスロジックを UI や API、DB などから独立させることに重点をおきます。レイヤーごとに役割を分離して、依存の方向をビジネスのコアロジックからサービスロジックへと一方向に管理します。このレポジトリでいうと domain > infrastructure/ user_cases > ui という階層で依存します。
+ビジネスロジックを UI や API、DB などから独立させることに重点をおいたソフトウェアの設計思想です。ビジネスロジックとサービスロジックを軸にレイヤーを分離していき、依存の方向をサービスロジックからビジネスロジックへと一方向に管理します。これによりサービスロジックでの変更(Ex. UI 変更やカスタマージャーニーの変更)がビジネスロジックに影響しないようにします。このレポジトリでいうと domain > infrastructure/ user_cases > ui という階層で依存します。
 
 ### 1. ドメイン(domain)
 
@@ -48,6 +48,34 @@ entity 以外のメソッドの interface を定義しています。
 #### 4-1. 依存性注入(di)
 
 ui 層の特筆すべき点は di 層を使って use_case とレポジトリ層(`infrastructure/repositories`)の関連付けを行っていることです。`src/ui/di/UserService.ts`を例にすると、HttpClient の具象クラスを UserRepository の具象クラスに流し込み、UserRepository をインスタンス化しています。このとき HttpClient をモックサーバーに置き換えてインスタンス化させたり、UserRepository を別のダミークラスに置き換えてインスタンス化させることもできます。唯一のルールはドメイン層で定義された interface およびデータ型の通りに実装されていることです。インスタンス化された UserRepository はユースケース層である UserService に流し込まれインスタンス化され、React アプリケーションで使用されています。
+
+## フォルダ構成
+
+```bash
+/src
+├── /domain
+│   ├── /entities         # データモデル。データの型を定義
+│   │     └── User.ts
+│   ├── /factories        # ファクトリパターン
+│   │     └── User.ts
+│   ├── /repositories     # レポジトリパターン。エンティティへのメソッドを定義する
+│   │     └── UserRepository.ts
+│   └── /services         # ストレージやHTTPクライアントなど、外部APIのメソッドを定義する
+│         └── HttpClient.ts
+├── /infrastructure
+│   ├── /repositories     # domain/repositoriesの具象クラス
+│   │     └── UserRepository.ts
+│   └── /services         # domain/servicesの具象クラス
+│         └── HttpClient.ts
+├── /use_case
+│   └── UserService.ts    # アプリケーションロジック
+└── /ui                   # ユーザーインターフェース。Reactアプリ
+    ├── /di               # 依存性を注入。ユースケースをインスタンス化してアプリで使用する
+    │     └── UserService.ts
+    └── /components       # React Viewコンポーネント
+    └── /hooks            # React Hook関数
+    └── /lib
+```
 
 ## セットアップ
 
